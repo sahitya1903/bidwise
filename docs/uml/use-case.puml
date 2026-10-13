@@ -1,0 +1,48 @@
+@startuml use-case
+!pragma layout smetana
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam usecaseBackgroundColor #F4F7FD
+skinparam usecaseBorderColor #2B4C7E
+title Figure 1 — Use case diagram (BidWise)
+
+actor Guest
+actor Bidder
+actor Seller
+actor Admin
+actor "Scheduler\n<<system>>" as Scheduler
+
+rectangle "Online Auction System" {
+  usecase "UC-01 Register" as UC01
+  usecase "UC-02 Log in / out" as UC02
+  usecase "UC-03 Browse & search auctions" as UC03
+  usecase "UC-04 View auction details" as UC04
+  usecase "UC-05 Place bid" as UC05
+  usecase "UC-06 View my bids" as UC06
+  usecase "UC-07 Create auction" as UC07
+  usecase "UC-08 Edit / cancel own auction" as UC08
+  usecase "UC-09 View my listings & results" as UC09
+  usecase "UC-10 Manage users" as UC10
+  usecase "UC-11 Cancel any auction" as UC11
+  usecase "UC-12 Close auction & pick winner" as UC12
+}
+
+Guest --> UC01
+Guest --> UC03
+Guest --> UC04
+Bidder --> UC02
+Bidder --> UC03
+Bidder --> UC04
+Bidder --> UC05
+Bidder --> UC06
+Seller --> UC07
+Seller --> UC08
+Seller --> UC09
+Admin --> UC10
+Admin --> UC11
+UC12 <-- Scheduler
+UC05 ..> UC02 : <<include>>
+
+note bottom of Seller : Bidder and Seller are roles of\nthe same registered user.
+@enduml

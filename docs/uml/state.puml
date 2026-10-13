@@ -1,0 +1,19 @@
+@startuml state
+!pragma layout smetana
+skinparam shadowing false
+skinparam stateBackgroundColor #FFFFFF
+skinparam stateBorderColor #2B4C7E
+title Figure 4 — Auction lifecycle
+
+[*] --> SCHEDULED : create [start > now]
+[*] --> ACTIVE : create [start <= now]
+SCHEDULED --> ACTIVE : start time reached\n(closingService.activateDue)
+SCHEDULED --> CANCELLED : cancel (seller / admin)
+ACTIVE --> ACTIVE : placeBid [valid]\n/ currentBid = amount, bidCount++
+ACTIVE --> SOLD : end time reached\n[bids > 0 and top >= reserve]
+ACTIVE --> UNSOLD : end time reached\n[no bids or top < reserve]
+ACTIVE --> CANCELLED : cancel\n[seller: no bids yet | admin]
+SOLD --> [*]
+UNSOLD --> [*]
+CANCELLED --> [*]
+@enduml

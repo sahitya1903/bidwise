@@ -1,0 +1,30 @@
+@startuml sequence-place-bid
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+title Figure 5 — Place bid, including the race-condition path
+
+actor Bidder
+participant "React UI\n(BidForm)" as UI
+participant "Express\n(auth + validate)" as API
+participant BiddingService as S
+database MongoDB as DB
+
+Bidder -> UI : 1. enter amount, Place bid
+UI -> API : 2. POST /api/auctions/:id/bids\n{ amount } + JWT
+API -> API : 3. requireAuth, validate(bidSchema)
+API -> S : 4. placeBid({auctionId, bidderId, amount})
+S -> DB : 5. Auction.findById(id)
+DB --> S : auction (bidCount = n)
+S -> S : 6. check BR-06, BR-05, BR-07, BR-03/04
+alt all rules pass and no one bid in between
+  S -> DB : 7. findOneAndUpdate({_id, status:ACTIVE,\nendTime > now, bidCount: n},\n{$set currentBid, highestBidder; $inc bidCount})
+  DB --> S : updated auction (bidCount = n + 1)
+  S -> DB : 8. Bid.create({auction, bidder, amount})
+  S --> API : { auction, bid }
+  API --> UI : 201 Created
+else rule broken, or another bid won the race (update matched nothing)
+  S --> API : AppError 409 (BID_TOO_LOW / OUTBID_RETRY / ...)
+  API --> UI : 409 { error: { code, message, details } }
+end
+UI --> Bidder : 9. show result
+@enduml

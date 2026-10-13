@@ -1,0 +1,42 @@
+@startuml architecture
+!pragma layout smetana
+skinparam shadowing false
+skinparam componentStyle rectangle
+title Figure 2 — Layered architecture
+
+package "React client (Vite)" #E1EFDF {
+  [pages / components] as Pages
+  [AuthContext] as Ctx
+  [api/client.js (axios + JWT)] as ApiClient
+}
+
+package "Express API server (Node.js)" #F4F7FD {
+  [routes/] as Routes
+  [middleware/\nauth · requireRole · validate · errorHandler] as MW
+  [controllers/] as Ctrl
+  [services/\nALL business rules] as Svc #DDE6F7
+  [models/\nUser · Auction · Bid] as Models
+  [jobs/auctionCloser\n(every 15 s)] as Job #FCEBD8
+}
+
+database "MongoDB" as DB
+
+Pages --> Ctx
+Pages --> ApiClient
+ApiClient --> Routes : REST / JSON\n(polls GET /auctions/:id every 3 s)
+Routes --> MW
+MW --> Ctrl
+Ctrl --> Svc
+Job --> Svc
+Svc --> Models
+Models --> DB : Mongoose
+
+note right of Svc
+  Unit tests (Jest + mongodb-memory-server)
+  call services directly.
+end note
+note left of Routes
+  Integration tests (Supertest)
+  send HTTP requests to app.js.
+end note
+@enduml

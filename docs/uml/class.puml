@@ -1,0 +1,100 @@
+@startuml class
+!pragma layout smetana
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #2B4C7E
+title Figure 3 — Domain classes (Mongoose models) and service layer
+
+class User {
+  _id : ObjectId
+  name : String
+  email : String {unique}
+  passwordHash : String
+  role : 'user' | 'admin'
+  createdAt : Date
+  --
+  toJSON() // hides passwordHash
+}
+
+class Auction {
+  _id : ObjectId
+  title : String
+  description : String
+  category : String
+  imageUrl : String
+  seller : -> User
+  startingPrice : Int (paise)
+  reservePrice : Int (paise)
+  minIncrement : Int (paise)
+  currentBid : Int (paise)
+  highestBidder : -> User | null
+  bidCount : Int
+  startTime : Date
+  endTime : Date
+  status : AuctionStatus
+  winner : -> User | null
+  finalPrice : Int | null
+  --
+  minNextBid() : Int
+  isOpenAt(now) : Boolean
+  isClosed() : Boolean
+  toPublicJSON({viewerId, now})
+}
+
+class Bid {
+  _id : ObjectId
+  auction : -> Auction
+  bidder : -> User
+  amount : Int (paise)
+  createdAt : Date
+  --
+  // immutable (BR-10)
+}
+
+enum AuctionStatus {
+  SCHEDULED
+  ACTIVE
+  SOLD
+  UNSOLD
+  CANCELLED
+}
+
+User "1 seller" -- "0..*" Auction : sells >
+User "1 bidder" -- "0..*" Bid : places >
+Auction "1" *-- "0..*" Bid : receives >
+Auction ..> AuctionStatus : status
+
+package "services (all business rules)" {
+  class AuthService <<service>> {
+    register(input)
+    login(input)
+    verifyToken(token)
+    listUsers()
+  }
+  class AuctionService <<service>> {
+    create({sellerId, data, now})
+    update({auctionId, userId, data, now})
+    cancel({auctionId, user})
+    list({q, category, status, sort, page})
+    getById(id)
+    listBySeller(sellerId)
+  }
+  class BiddingService <<service>> {
+    placeBid({auctionId, bidderId, amount, now})
+    getBidHistory(auctionId)
+    getUserBids(userId)
+  }
+  class ClosingService <<service>> {
+    activateDue(now)
+    closeExpired(now)
+    runOnce(now)
+  }
+}
+
+AuthService ..> User
+AuctionService ..> Auction
+BiddingService ..> Auction
+BiddingService ..> Bid
+ClosingService ..> Auction
+@enduml
