@@ -1,0 +1,20 @@
+{
+  "name": "bidwise",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BidWise online auction system (MERN) - convenience scripts for both apps",
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,magenta \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "install:all": "npm install && npm --prefix server install && npm --prefix client install",
+    "seed": "npm --prefix server run seed",
+    "server": "npm --prefix server run dev",
+    "client": "npm --prefix client run dev",
+    "test": "npm --prefix server test && npm --prefix client test",
+    "test:cov": "npm --prefix server run test:cov",
+    "lint": "npm --prefix server run lint",
+    "build": "npm --prefix client run build"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  }
+}
